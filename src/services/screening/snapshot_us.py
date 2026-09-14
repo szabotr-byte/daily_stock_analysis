@@ -40,7 +40,7 @@ def fetch_us_universe(source: str = "auto") -> list[str]:
         auto    — try sp500 → env → default
     """
     src = source.lower()
-        if src == "penny":
+    if src == "penny":
         return _fetch_penny_tickers()
     if src == "auto":
         for s in ("sp500", "env", "default"):
