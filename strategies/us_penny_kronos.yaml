@@ -1,135 +1,89 @@
-# US Penny Stock + Kronos Strategy
-
 name: us_penny_kronos
 display_name: US Penny Breakout + Kronos
-description: Strategie pentru identificarea acțiunilor US small-cap cu preț mic, low float, volum neobișnuit, gap și catalizator.
+description: US penny-stock screening strategy using price, market cap, volume, momentum, technical setup and optional Kronos confirmation.
+version: "1"
 category: breakout
-core_rules: [1, 2, 3]
-required_tools:
+
+tags:
+  - US
+  - penny
+  - low_float
+  - breakout
+  - Kronos
+
+analysis_skills:
   - get_daily_history
   - analyze_trend
-aliases: [penny, penny stocks, low float, US penny breakout, Kronos]
-default_active: false
-default_router: false
-default_priority: 20
-market_regimes: [trending_up, volatile]
 
-instructions: |
-  US PENNY BREAKOUT + KRONOS
+style:
+  risk_profile: aggressive
+  holding_period: intraday
+  execution_style: breakout
+  market_regime:
+    - trending_up
+    - volatile
+  capital_profile: speculative
+  ui_badge: Penny + Kronos
 
-  Scop:
-  Identifică acțiuni US cu potențial de breakout intraday, folosind
-  filtrarea fundamentală, volumul, low float, analiza tehnică,
-  catalizatorul și confirmarea opțională Kronos.
+screening:
+  enabled: true
+  market_scope:
+    - us
 
-  FILTRE PRINCIPALE:
+  hard_filters:
+    exclude_st: true
+    price_min: 1.0
+    price_max: 5.0
+    market_cap_max: 300000000
+    volume_ratio_min: 2.0
+    change_pct_min: 3.0
 
-  1. Preț:
-     - $1 până la $5.
+  tech_weight: 0.35
 
-  2. Market cap:
-     - maximum $300M.
+  factor_weights:
+    momentum: 0.20
+    activity: 0.20
+    technical: 0.15
+    stability: 0.10
 
-  3. Float:
-     - maximum 30M acțiuni.
-     - Preferă float sub 10M.
-     - Low float sub 5M este considerat foarte puternic, dar și foarte riscant.
+  scoring_profile:
+    momentum_base: 50
+    activity_ideal_volume_ratio: 2.0
 
-  4. Volum:
-     - Relative Volume minimum 2x.
-     - Premarket volume minimum 100K.
-     - Preferă volume mult peste medie.
+  risk_profile:
+    chase_change_pct: 15
+    chase_points: 15
+    abnormal_volume_ratio: 10
+    abnormal_volume_ratio_points: 10
 
-  5. Gap:
-     - minimum +3%.
-     - Preferă gap de minimum +5% dacă există catalizator.
+  ranking_hints: |
+    Prefer US penny stocks with:
+    - price between $1 and $5
+    - market cap below $300M
+    - relative volume above 2x
+    - gap or daily momentum above 3%
+    - low float when available
+    - strong premarket volume when available
+    - price above VWAP
+    - EMA9 above EMA20
+    - breakout above previous day high
+    - a fresh and credible catalyst
 
-  6. Catalizator:
-     - caută știri sau evenimente recente.
-     - Exemple: contract, FDA, rezultate clinice, parteneriat,
-       rezultate financiare, ofertă strategică, upgrade, aprobare,
-       fuziune sau alt eveniment material.
-     - Nu considera simpla creștere a prețului drept catalizator.
+    Penalize:
+    - dilution
+    - recent reverse splits
+    - ATM offerings
+    - public offerings
+    - private placements
+    - convertible notes
+    - excessive extension from VWAP
+    - weak liquidity
 
-  ANALIZĂ TEHNICĂ:
+    Kronos is an optional confirmation layer.
+    Kronos must never execute orders.
 
-  - Verifică Premarket High.
-  - Verifică Previous Day High.
-  - Verifică VWAP.
-  - Verifică EMA9, EMA20 și EMA50.
-  - Preferă preț peste VWAP.
-  - Preferă EMA9 peste EMA20.
-  - Preferă breakout peste Previous Day High.
-  - Evită intrarea după o extensie excesivă față de VWAP.
+    Prefer a clear breakout setup with defined risk.
+    If catalyst, volume and technical structure are not sufficiently strong,
+    recommend WAIT instead of forcing a trade.
 
-  SCOR:
-
-  - Catalizator: 20%
-  - Volum: 20%
-  - Float: 15%
-  - Setup tehnic: 15%
-  - Kronos: 15%
-  - Regim de piață: 5%
-  - Risc de diluare: 10% penalizare
-
-  KRONOS:
-
-  - Kronos este folosit numai ca sistem de confirmare.
-  - Nu execută ordine.
-  - Un semnal bullish poate crește scorul.
-  - Un semnal bearish reduce atractivitatea setup-ului.
-  - Dacă Kronos nu este disponibil, nu bloca scanarea.
-  - Nu considera predicția Kronos drept garanție a creșterii.
-
-  RISC DE DILUARE:
-
-  Verifică:
-  - ATM offering.
-  - Public offering.
-  - Private placement.
-  - Convertible notes.
-  - Warrants.
-  - Reverse split recent.
-  - Creșterea numărului de acțiuni.
-
-  Penalizează puternic companiile cu risc ridicat de diluare.
-
-  TRADE PLAN:
-
-  Pentru candidatul cu cel mai bun scor, generează:
-
-  TOP 1:
-  - Ticker
-  - Company
-  - Score
-  - Catalyst
-  - Entry
-  - Stop Loss
-  - TP1
-  - TP2
-  - TP3
-  - Risk/Reward
-  - Kronos direction
-  - Kronos score
-  - Main risks
-
-  Entry trebuie să fie bazat pe confirmarea breakout-ului,
-  VWAP și Previous Day High atunci când datele sunt disponibile.
-
-  Stop Loss trebuie să fie bazat pe ATR sau pe structura tehnică relevantă.
-
-  Take profit:
-  - TP1 = aproximativ 1.5R
-  - TP2 = aproximativ 2.5R
-  - TP3 = aproximativ 4R
-
-  REGULĂ FINALĂ:
-
-  Dacă setup-ul nu are catalizator, volum suficient și structură tehnică
-  clară, recomandă AȘTEAPTĂ.
-
-  Nu forța tranzacții.
-
-  Scannerul produce doar analiză și trade plan.
-  Nu executa ordine și nu conecta această strategie la un sistem de
-  execuție automată.
+  max_output: 5
