@@ -40,6 +40,8 @@ def fetch_us_universe(source: str = "auto") -> list[str]:
         auto    — try sp500 → env → default
     """
     src = source.lower()
+        if src == "penny":
+        return _fetch_penny_tickers()
     if src == "auto":
         for s in ("sp500", "env", "default"):
             try:
@@ -62,7 +64,45 @@ def fetch_us_universe(source: str = "auto") -> list[str]:
         return list(_DEFAULT_US_UNIVERSE)
     else:
         raise ValueError(f"Unknown US universe source: {source}")
+def _fetch_penny_tickers() -> list[str]:
+    """Fetch a US penny-stock candidate universe from Yahoo Finance."""
 
+    import yfinance as yf
+    from yfinance import EquityQuery
+
+    exchanges = [
+        "ASE", "BTS", "CXI", "NAE", "NCM", "NGM",
+        "NMS", "NYQ", "OEM", "OQB", "OQX", "PCX",
+        "PNK", "YHD",
+    ]
+
+    query = EquityQuery("and", [
+        EquityQuery("eq", ["region", "us"]),
+        EquityQuery("gte", ["intradayprice", 1.0]),
+        EquityQuery("lte", ["intradayprice", 5.0]),
+        EquityQuery("lt", ["intradaymarketcap", 300_000_000]),
+        EquityQuery("is-in", ["exchange", *exchanges]),
+    ])
+
+    response = yf.screen(
+        query,
+        size=250,
+        sortField="percentchange",
+        sortAsc=False,
+    )
+
+    quotes = response.get("quotes", [])
+    tickers = sorted({
+        str(item.get("symbol", "")).strip()
+        for item in quotes
+        if item.get("symbol")
+    })
+
+    if not tickers:
+        raise RuntimeError("Yahoo Finance returned no penny-stock candidates")
+
+    logger.info("Penny universe from yfinance: %d tickers", len(tickers))
+    return tickers
 
 def _fetch_sp500_tickers() -> list[str]:
     tables = pd.read_html(_SP500_WIKI_URL)
